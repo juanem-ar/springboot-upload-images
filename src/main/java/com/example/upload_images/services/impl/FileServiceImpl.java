@@ -5,12 +5,11 @@ import com.example.upload_images.models.dtos.FileComplexResponse;
 import com.example.upload_images.services.IFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,8 +55,7 @@ public class FileServiceImpl implements IFileService {
         return errorList.isEmpty() ? resultWithoutErrors : resultWithErrors;
     }
 
-    @NotNull
-    private static FileComplexResponse getString(MultipartFile file) throws BadRequestException {
+    private FileComplexResponse getString(MultipartFile file) throws Exception {
 
         String fileNameExtension = getFileNameExtension();
         List<String> errorList = new ArrayList<>();
@@ -80,15 +78,13 @@ public class FileServiceImpl implements IFileService {
         return !errorList.isEmpty() ?  resultWithErrors : resultWithoutErrors;
     }
 
-    @NotNull
-    private static String getFileNameExtension() {
+    private String getFileNameExtension() {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss-SSS");
         return now.format(formatter);
     }
 
-    @NotNull
-    private static FileComplexResponse getFileOriginalName(MultipartFile file) throws BadRequestException {
+    private FileComplexResponse getFileOriginalName(MultipartFile file) throws IOException {
         List<String> errorList = new ArrayList<>();
         String fileOriginalName = file.getOriginalFilename();
 
@@ -100,11 +96,11 @@ public class FileServiceImpl implements IFileService {
         }
 
         if (
-                !fileOriginalName.endsWith(".jpg") &&
                 !fileOriginalName.endsWith(".jpeg") &&
+                !fileOriginalName.endsWith(".jpg") &&
                 !fileOriginalName.endsWith(".png")
         ){
-            errorList.add("Error in \"" + fileOriginalName + "\". Because only JPG, JPEG, PNG files are allowed");
+            errorList.add("Error in \"" + fileOriginalName + "\". Because only JPEG, PNG files are allowed");
         }
         var resultWithErrors = FileComplexResponse.builder().baseResponse(new BaseResponse(errorList.toArray(new String[0]))).build();
         var resultWithoutErrors = FileComplexResponse.builder().response(fileOriginalName).baseResponse(new BaseResponse(null)).build();
